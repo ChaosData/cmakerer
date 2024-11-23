@@ -57,6 +57,10 @@ add_compile_definitions(
   {vals}
 )'''
 
+def raw_print(b):
+  sys.stdout.buffer.write(b)
+  sys.stdout.buffer.write(b'\n')
+
 def parse_args():
   parser = argparse.ArgumentParser(
     description='Generates 3 (generally non-buildable) cmake files ' +
@@ -140,9 +144,9 @@ def is_excluded(dirpath, excludelst):
       return True
     elif args.debug:
       if dirpath in ex:
-        print(b'dirpath in ex: %s in %s' % (dirpath, ex))
+        print('dirpath in ex: %s in %s' % (dirpath, ex))
       elif ex in dirpath:
-        print(b'ex in dirpath: %s in %s' % (ex, dirpath))
+        print('ex in dirpath: %s in %s' % (ex, dirpath))
   return False
 
 def is_excludedat(dirpath, excludeatlst):
@@ -154,6 +158,11 @@ def is_filtered(dirname, filterlst):
   for f in filterlst:
     if dirname.lower() == f.lower():
       return True
+    #elif args.debug:
+    #  if dirname in f:
+    #    print('dirname in f: %s in %s' % (dirname, f))
+    #  elif f in dirname:
+    #    print('f in dirname: %s in %s' % (f, dirname))
   return False
 
 def has_ext(filename, exts):
@@ -309,9 +318,9 @@ def search(args, excludelst, excludeatlst, filterlst, header_exts, code_exts):
           inc = rem[:pos]
           if args.debug:
             if quote:
-              print(b'found #include "%s"' % inc)
+              raw_print(b'found #include "%s"' % inc)
             elif system:
-              print(b'found #include <%s>' % inc)
+              raw_print(b'found #include <%s>' % inc)
           if b'/' not in inc:
             if system:
               m = b'/' + inc
@@ -323,11 +332,11 @@ def search(args, excludelst, excludeatlst, filterlst, header_exts, code_exts):
                   rpos = s.find(m)
                   s = s[:rpos]
                   if args.debug:
-                    print(b'adding system include of %s for #include <%s>'
+                    raw_print(b'adding system include of %s for #include <%s>'
                           % (s, inc))
                   systemlst.add(s)
               if not found and args.debug:
-                print(b'failed to match %s' % (inc))
+                raw_print(b'failed to match %s' % (inc))
             continue
 
           incpath = b'/'.join(inc.split(b'/')[:-1])
@@ -346,10 +355,10 @@ def search(args, excludelst, excludeatlst, filterlst, header_exts, code_exts):
           for npath in npaths:
             if args.debug:
               if quote:
-                print(b'adding include of %s for #include "%s"'
+                raw_print(b'adding include of %s for #include "%s"'
                       % (npath, inc))
               elif system:
-                print(b'adding system include of %s for #include <%s>'
+                raw_print(b'adding system include of %s for #include <%s>'
                       % (npath, inc))
             lst.add(npath)
     except Exception as e:
