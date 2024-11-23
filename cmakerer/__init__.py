@@ -1,4 +1,5 @@
 # Copyright (c) NCC Group, 2018-2020
+# Copyright (c) Google LLC., 2024
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,6 +27,8 @@ import argparse
 import sys
 import os
 import string
+
+args = None
 
 # bytes don't have format() b/c python3 sucks, so we emulate it
 cmake_template = b'''\
@@ -126,6 +129,11 @@ def is_excluded(dirpath, excludelst):
       return True
     elif dirpath.startswith(ex + '/'):
       return True
+    elif args.debug:
+      if dirpath in ex:
+        print(b'dirpath in ex: %s in %s' % (dirpath, ex))
+      elif ex in dirpath:
+        print(b'ex in dirpath: %s in %s' % (ex, dirpath))
   return False
 
 def is_excludedat(dirpath, excludeatlst):
@@ -396,6 +404,7 @@ def generate_output(args, cwd, systemlst, includelst, srcfilelst):
       fd.write(output)
 
 def main():
+  global args
   args = parse_args()
 
   excludelst = generate_excludelst(args)
