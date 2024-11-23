@@ -12,7 +12,7 @@ setup(
   long_description_content_type='text/markdown',
   author='Jeff Dileo',
   author_email='jtdileo@gmail.com',
-  url='https://github.com/nccgroup/cmakerer',
+  url='https://github.com/ChaosData/cmakerer',
   license='BSD (2 Clause)',
 
   python_requires='>=3.6.0',
