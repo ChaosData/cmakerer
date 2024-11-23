@@ -140,8 +140,10 @@ def parse_args():
   last_config_index = None
   if len(_pre_args.config) > 0:
     for i in range(len(sys.argv)):
-      if sys.argv[i] == "-C" or sys.argv[i].startswith("--config"):
-        last_config_index = i
+      if sys.argv[i] == "-C" or sys.argv[i] == "--config":
+        last_config_index = i + 2
+      elif sys.argv[i].startswith("--config="):
+        last_config_index = i + 1
     for config_path in _pre_args.config:
       configs += shlex.split(open(config_path, 'r').read().replace("\n", " "))
     synth_argv = sys.argv[:last_config_index] + configs + sys.argv[last_config_index:]
