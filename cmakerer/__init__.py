@@ -344,6 +344,18 @@ def search(args, excludelst, excludeatlst, filterlst, header_exts, code_exts):
           else:
             includelst.add(get_bytes(root[2:].replace('\\', '/')))
 
+  #find_include_directories_from_includes(srcfilelst, includelst, systemlst)
+
+  return [srcfilelst, includelst, systemlst]
+
+
+def bytes_format(fmt, **kwargs):
+  out = b'' + fmt
+  for (k,v) in kwargs.items():
+    out = out.replace(('{'+k+'}').encode(), v)
+  return out
+
+def find_include_directories_from_includes(srcfilelst, includelst, systemlst):
   cneedle = b'#include'
   needle = b'include'
 
@@ -385,31 +397,38 @@ def search(args, excludelst, excludeatlst, filterlst, header_exts, code_exts):
               raw_print(b'found #include "%s"' % inc)
             elif system:
               raw_print(b'found #include <%s>' % inc)
-          if b'/' not in inc:
-            if system:
-              m = b'/' + inc
-              found = False
-              for src in srcfilelst:
-                s = get_bytes(src)
-                if s.endswith(m):
-                  found = True
-                  rpos = s.find(m)
-                  s = s[:rpos]
-                  if args.debug:
-                    raw_print(b'adding system include of %s for #include <%s>'
-                          % (s, inc))
-                  systemlst.add(s)
-              if not found and args.debug:
-                raw_print(b'failed to match %s' % (inc))
-            continue
 
-          incpath = b'/'.join(inc.split(b'/')[:-1])
-          npaths = set([])
           lst = None
           if quote:
             lst = includelst
           elif system:
             lst = systemlst
+
+          #if b'/' not in inc:
+          if True:
+            m = b'/' + inc
+            found = False
+            for src in srcfilelst:
+              s = get_bytes(src)
+              if s.endswith(m):
+                found = True
+                rpos = s.find(m)
+                s = s[:rpos]
+                if args.debug:
+                  if quote:
+                    raw_print(b'adding include of %s for #include "%s"'
+                        % (s, inc))
+                  if system:
+                    raw_print(b'adding system include of %s for #include <%s>'
+                        % (s, inc))
+                lst.add(s)
+            if not found and args.debug:
+              if inc not in srcfilelst:
+                raw_print(b'failed to match %s' % (inc))
+            #continue
+
+          incpath = b'/'.join(inc.split(b'/')[:-1])
+          npaths = set([])
 
           for path in lst:
             #path = path.encode()
@@ -428,15 +447,6 @@ def search(args, excludelst, excludeatlst, filterlst, header_exts, code_exts):
     except Exception as e:
       sys.stderr.write("{}: {}\n".format(srcfile, e))
       raise e
-
-  return [srcfilelst, includelst, systemlst]
-
-
-def bytes_format(fmt, **kwargs):
-  out = b'' + fmt
-  for (k,v) in kwargs.items():
-    out = out.replace(('{'+k+'}').encode(), v)
-  return out
 
 def generate_output(args, cwd, systemlst, includelst, srcfilelst):
   proj_path = ""
@@ -539,6 +549,8 @@ def main():
     except OSError as e:
       sys.stderr.write("{}\n".format(e))
       sys.exit(1)
+
+  find_include_directories_from_includes(full_srcfilelst, full_includelst, full_systemlst)
 
   full_srcfilelst = [x for x in set(full_srcfilelst) if x not in args.executable_remove]
   full_includelst = set([x for x in full_includelst if x not in args.include_remove])
