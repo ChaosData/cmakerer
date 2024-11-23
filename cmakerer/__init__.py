@@ -268,8 +268,8 @@ def generate_code_exts(args, header_exts):
 
 def search(args, excludelst, excludeatlst, filterlst, header_exts, code_exts):
   srcfilelst = []
-  includelst = set(args.include)
-  systemlst = set(args.system_include)
+  includelst = set([])
+  systemlst = set([])
 
   for root, dirs, files in os.walk('.', topdown=True):
     if is_excluded(root, excludelst): # or is_filtered(root, filterlst):
@@ -463,8 +463,8 @@ def main():
   code_exts = generate_code_exts(args, header_exts)
 
   full_srcfilelst = []
-  full_includelst = set([])
-  full_systemlst = set([])
+  full_includelst = set(args.include)
+  full_systemlst = set(args.system_include)
 
   cwd = os.getcwd()
   nwd = None
