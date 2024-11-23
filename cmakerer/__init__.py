@@ -27,6 +27,7 @@ import argparse
 import sys
 import os
 import string
+import re
 
 args = None
 
@@ -95,6 +96,12 @@ def parse_args():
                            'These are used to exclude any path containing a ' +
                            'matching segment (e.g. `-! test` will exlude ' +
                            '`foo/bar/test/**`).')
+  parser.add_argument('-R', '--remove', metavar='<path>', type=str, nargs=1,
+                      action='append', default=[],
+                      help='Raw path to remove from include directory, system ' +
+                           'include directory, and executable file lists ' +
+                           '(repatable). To select the lists to remove from, ' +
+                           'prefix with "[i][s][e]:"')
   parser.add_argument('-i', '--header-types', metavar='<types,list>', type=str,
                       nargs=1, action='append', default=[],
                       help='Comma-delimited list of header file extensions ' +
@@ -133,7 +140,25 @@ def parse_args():
 
   args.include = [x[0].encode() for x in args.include]
   args.system_include = [x[0].encode() for x in args.system_include]
-
+  args.remove = [x[0].encode() for x in args.remove]
+  args.include_remove = set([])
+  args.system_include_remove = set([])
+  args.executable_remove = set([])
+  remove_prefix_matcher = re.compile(b'^([ise]{1,3}:)')
+  for rem in args.remove:
+    m = remove_prefix_matcher.match(rem)
+    if m:
+      g = m.groups(0)[0]
+      if b'i' in g:
+        args.include_remove.add(rem[len(g):])
+      if b's' in g:
+        args.system_include_remove.add(rem[len(g):])
+      if b'e' in g:
+        args.executable_remove.add(rem[len(g):])
+    else:
+      args.include_remove.add(rem)
+      args.system_include_remove.add(rem)
+      args.executable_remove.add(rem)
   return args
 
 def is_excluded(dirpath, excludelst):
@@ -149,8 +174,11 @@ def is_excluded(dirpath, excludelst):
         print('ex in dirpath: %s in %s' % (ex, dirpath))
   return False
 
-def is_excludedat(dirpath, excludeatlst):
-  return dirpath in excludedatlst
+#def is_excludedat(dirpath, excludeatlst):
+#  return dirpath in excludeatlst
+
+def to_remove(path, remove_set):
+  return path in remove_set
 
 def is_filtered(dirname, filterlst):
   if dirname.startswith('.') and dirname != '.':
@@ -425,6 +453,9 @@ def main():
   global args
   args = parse_args()
 
+  if args.debug:
+    print(repr(args))
+
   excludelst = generate_excludelst(args)
   excludeatlst = generate_excludeatlst(args)
   filterlst = generate_filterlst(args)
@@ -472,6 +503,10 @@ def main():
     except OSError as e:
       sys.stderr.write("{}\n".format(e))
       sys.exit(1)
+
+  full_srcfilelst = [x for x in set(full_srcfilelst) if x not in args.executable_remove]
+  full_includelst = set([x for x in full_includelst if x not in args.include_remove])
+  full_systemlst = set([x for x in full_systemlst if x not in args.system_include_remove])
 
   generate_output(args, cwd, full_systemlst, full_includelst, full_srcfilelst)
 
