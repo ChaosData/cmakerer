@@ -68,6 +68,12 @@ def parse_args():
   parser.add_argument('-D', '--define', metavar='<VAR=value>', type=str, nargs=1,
                       action='append', default=[],
                       help='Compiler define to add (repeatable).')
+  parser.add_argument('-I', '--include', metavar='<path>', type=str, nargs=1,
+                      action='append', default=[],
+                      help='Raw path to add as an include directory (repatable).')
+  parser.add_argument('-S', '--system-include', metavar='<path>', type=str, nargs=1,
+                      action='append', default=[],
+                      help='Raw path to add as a system include directory (repatable).')
   parser.add_argument('-x', '--exclude', metavar='<path>', type=str, nargs=1,
                       action='append', default=[],
                       help='Path to exclude (repatable). ' +
@@ -120,6 +126,9 @@ def parse_args():
   if args.base_dir:
     if args.base_dir.endswith('/') or args.base_dir.endswith('\\'):
       args.base_dir = args.base_dir[:-1]
+
+  args.include = [x[0].encode() for x in args.include]
+  args.system_include = [x[0].encode() for x in args.system_include]
 
   return args
 
@@ -222,8 +231,8 @@ def generate_code_exts(args, header_exts):
 
 def search(args, excludelst, excludeatlst, filterlst, header_exts, code_exts):
   srcfilelst = []
-  includelst = set([])
-  systemlst = set([])
+  includelst = set(args.include)
+  systemlst = set(args.system_include)
 
   for root, dirs, files in os.walk('.', topdown=True):
     if is_excluded(root, excludelst): # or is_filtered(root, filterlst):
