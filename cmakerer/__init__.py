@@ -127,7 +127,8 @@ def parse_args():
                       help='Path to a config file to load additional options ' +
                            'from. Options are specified in CLI argument form ' +
                            'and multiple sets of options may be specified ' +
-                           'across multiple lines.')
+                           'across multiple lines. Lines starting with "#"' +
+                           'are ignored.')
   parser.add_argument('search_roots', metavar='<root>', nargs='+', type=str,
                       help='Directory to search. If multiple are supplied, ' +
                            '-b must also be set', default=[])
@@ -145,7 +146,11 @@ def parse_args():
       elif sys.argv[i].startswith("--config="):
         last_config_index = i + 1
     for config_path in _pre_args.config:
-      configs += shlex.split(open(config_path, 'r').read().replace("\n", " "))
+      lines = open(config_path, 'r').read().split("\n")
+      lines = [line for line in lines if not line.startswith("#") and line.strip() != ""]
+      config = " ".join(lines)
+      configs += shlex.split(config)
+
     synth_argv = sys.argv[:last_config_index] + configs + sys.argv[last_config_index:]
 
     if _pre_args.debug:
