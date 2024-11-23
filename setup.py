@@ -6,12 +6,12 @@ from setuptools import setup
 
 setup(
   name='cmakerer',
-  version='1.2.0',
+  version='1.3.0',
   description='Generates CMakeLists.txt files from arbitrary C/C++ codebases.',
   long_description=open('README.md').read(),
   long_description_content_type='text/markdown',
   author='Jeff Dileo',
-  author_email='jeff.dileo@nccgroup.trust',
+  author_email='jtdileo@gmail.com',
   url='https://github.com/nccgroup/cmakerer',
   license='BSD (2 Clause)',
 
