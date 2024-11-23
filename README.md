@@ -29,3 +29,4 @@ cmakerer -o ~/path/to/cpp/code/CMakeLists.txt -x src/windows -! tests -z ~/path/
 * Exclude (sub)directory segments with `-!`
 * Exclude cmake directories with `-z`
 * Add compiler defines with `-DVAR` or `-DVAR=value`
+* Deterministically add and remove paths with `-I`/`-S`/`-R`
