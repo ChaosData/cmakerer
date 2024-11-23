@@ -28,6 +28,7 @@ import sys
 import os
 import string
 import re
+import shlex
 
 args = None
 
@@ -121,10 +122,36 @@ def parse_args():
                       help='Debug output.')
   parser.add_argument('-b', '--base-dir', metavar='<path>', type=str,
                       help='Base directory of provided search roots.')
+  parser.add_argument('-C', '--config', metavar='<path>', type=str, nargs=1,
+                      action='append', default=[],
+                      help='Path to a config file to load additional options ' +
+                           'from. Options are specified in CLI argument form ' +
+                           'and multiple sets of options may be specified ' +
+                           'across multiple lines.')
   parser.add_argument('search_roots', metavar='<root>', nargs='+', type=str,
                       help='Directory to search. If multiple are supplied, ' +
                            '-b must also be set', default=[])
-  args = parser.parse_args()
+  args = None
+
+  _pre_args = parser.parse_args()
+  _pre_args.config = [x[0] for x in _pre_args.config]
+  sub_args = []
+  configs = []
+  last_config_index = None
+  if len(_pre_args.config) > 0:
+    for i in range(len(sys.argv)):
+      if sys.argv[i] == "-C" or sys.argv[i].startswith("--config"):
+        last_config_index = i
+    for config_path in _pre_args.config:
+      configs += shlex.split(open(config_path, 'r').read().replace("\n", " "))
+    synth_argv = sys.argv[:last_config_index] + configs + sys.argv[last_config_index:]
+
+    if _pre_args.debug:
+      print(repr(synth_argv[1:]))
+
+    args = parser.parse_args(synth_argv[1:])
+  else:
+    args = _pre_args
 
   if len(args.search_roots) > 1:
     if args.base_dir == None:
@@ -159,7 +186,9 @@ def parse_args():
       args.include_remove.add(rem)
       args.system_include_remove.add(rem)
       args.executable_remove.add(rem)
+
   return args
+
 
 def is_excluded(dirpath, excludelst):
   for ex in excludelst:
