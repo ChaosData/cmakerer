@@ -451,13 +451,17 @@ def find_include_directories_from_includes(srcfilelst, includelst, systemlst):
 
 def escape_bstring(path):
   r = b""
-  for b in path:
+  for i in range(len(path)):
+    b = path[i:i+1]
     if b in [b'"', b"\\", b"$"]:
       r += b"\\"
     r += b
   return r
 
 def escape_string(path):
+  if type(path) == bytes:
+    return escape_bstring(path)
+
   r = ""
   for c in path:
     if c in ['"', "\\", "$"]:
@@ -484,14 +488,14 @@ def generate_output(args, cwd, systemlst, includelst, srcfilelst):
   else:
     proj_path = args.search_roots[0]
 
-  projname = b'"' + escape_bstring(get_bytes(proj_path.split('/')[-1].split('\\')[-1], errors="ignore")) + b'"'
-  systemlst = [b'"' + escape_bstring(inc) + b'"' for inc in systemlst]
+  projname = b'"' + escape_string(get_bytes(proj_path.split('/')[-1].split('\\')[-1], errors="ignore")) + b'"'
+  systemlst = [b'"' + escape_string(inc) + b'"' for inc in systemlst]
   systemlst.sort()
   systemstr = b'\n  '.join(systemlst)
-  includelst = [b'"' + escape_bstring(inc) + b'"' for inc in includelst]
+  includelst = [b'"' + escape_string(inc) + b'"' for inc in includelst]
   includelst.sort()
   includestr = b'\n  '.join(includelst)
-  srcfilelst = [b'"' + escape_bstring(src) + b'"' for src in srcfilelst]
+  srcfilelst = [b'"' + escape_string(src) + b'"' for src in srcfilelst]
   srcfilelst.sort()
   srcfilestr = b'\n  '.join(srcfilelst)
 
@@ -499,7 +503,7 @@ def generate_output(args, cwd, systemlst, includelst, srcfilelst):
   if len(args.define) > 0:
     compiler_defs
   for d in args.define:
-    compiler_defs = compiler_defs_template.format(vals='\n  '.join([('"' + escape_bstring(pairl[0]) + '"') for pairl in args.define]).strip())
+    compiler_defs = compiler_defs_template.format(vals='\n  '.join([('"' + escape_string(pairl[0]) + '"') for pairl in args.define]).strip())
 
   format_args = {
     'project_name': projname,
